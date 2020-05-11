@@ -130,12 +130,63 @@ class HeatmapElement extends PolymerElement {
     // console.log("end max: " + (t2-t1));
   }
 
+  get_indiffernce_curve_points(assets, target_utility, delta, util_function, width, height){
+    var points = [];
+
+    // Iterate this way so points generated in a left-right sorted fashion
+    for (let col = 0; col < width; col++) {
+      for (let row = 0; row < height; row++) {
+        
+
+
+        // Get the current pixel's x and y asset values, based on: 
+        // https://stackoverflow.com/questions/929103/convert-a-number-range-to-another-range-maintaining-ratio
+        const pixel_x_value = ((col * (assets.maxXAsset - assets.minXAsset)) / width) + (assets.minXAsset);
+        const pixel_y_value = (( (height - row) * (assets.maxYAsset - assets.minYAsset)) / height) + (assets.minYAsset);
+        
+
+        // Call utility function
+        const point_payoff = util_function(pixel_x_value, pixel_y_value);
+        
+        // get differnce from target util
+        var difference = Math.abs(point_payoff - target_utility);
+
+        if(difference < delta){
+          points.push({x: col, y: row});
+        }
+      }
+    }
+
+    return points;
+
+  }
+
+  // Taken from:
+  // https://stackoverflow.com/questions/7054272/how-to-draw-smooth-curve-through-n-points-using-javascript-html5-canvas
+  draw_indifference_curve(context, points){
+    context.beginPath();
+    context.moveTo((points[0].x), points[0].y);
+
+    for(var i = 0; i < points.length-1; i ++)
+    {
+
+      var x_mid = (points[i].x + points[i+1].x) / 2;
+      var y_mid = (points[i].y + points[i+1].y) / 2;
+      var cp_x1 = (x_mid + points[i].x) / 2;
+      var cp_x2 = (x_mid + points[i+1].x) / 2;
+      context.quadraticCurveTo(cp_x1,points[i].y ,x_mid, y_mid);
+      context.quadraticCurveTo(cp_x2,points[i+1].y ,points[i+1].x,points[i+1].y);
+    }
+    context.stroke();
+  }
 
   define_current_curve(){
     if(!this.currentUtility){
       return;
     }
+    // var t1 = performance.now();
     const canvas = this.$.heatmapCanvas;
+    const context = canvas.getContext("2d");
 
     const assets = {
       maxXAsset: this.maxXAsset,
@@ -143,59 +194,12 @@ class HeatmapElement extends PolymerElement {
       maxYAsset: this.maxYAsset,
       minYAsset: this.minYAsset,
     }
+    
 
-    this.draw_indifference_curve(canvas, this.currentUtility, false, this.utility_function, 1, assets);
-  }
-
-
-  draw_indifference_curve(canvas, currentUtility, isHover, eval_function, delta, assets){
-
-    const w = canvas.width;
-    const h = canvas.height;
-    const ctx = canvas.getContext('2d');
-    var t1 = performance.now();
-
-    // create empty imageData object
-    const imageData = ctx.getImageData(0,0, w, h);
-    const data = imageData.data;
-
-    // iterate through every pixel in the image in row major order
-    for (let row = 0; row < h; row++) {
-
-      for (let col = 0; col < w; col++) {
-
-        // Get the current pixel's x and y asset values, based on: 
-        // https://stackoverflow.com/questions/929103/convert-a-number-range-to-another-range-maintaining-ratio
-        const pixel_x_value = ((col * (assets.maxXAsset - assets.minXAsset)) / w) + (assets.minXAsset);
-        const pixel_y_value = (( (h - row) * (assets.maxYAsset - assets.minYAsset)) / h) + (assets.minYAsset);
-        
-
-        // Call utility function
-        const point_payoff = eval_function(pixel_x_value, pixel_y_value);
-
-        // divide the payoff by the max payoff to get an color intensity percentage
-        // use get_gradient_color to get the appropriate color in the gradient for that percentage
-        var difference = Math.abs(point_payoff - currentUtility);
-
-        // set imageData for this pixel to the calculated color
-        const index = (row * w * 4) + (col * 4);
-        if(difference < delta){
-          data[index] = 0;
-          data[index + 1] = 0;
-          data[index + 2] = 0;
-          // set alpha channel to fully opaque
-          data[index + 3] = 255;
-        }
-      }
-    }
-
-    ctx.putImageData(imageData, 0, 0);
-    var t2 = performance.now();
-    console.log("end curve: " + (t2-t1));
-
-
-    return 0;
-
+    const points = this.get_indiffernce_curve_points(assets, this.currentUtility, 1, this.utility_function, canvas.width, canvas.height);
+    this.draw_indifference_curve(context,points);
+    // var t2 = performance.now();
+    // console.log("end curve: " + (t2-t1));
   }
 
   // hover_test(e){
@@ -253,7 +257,7 @@ class HeatmapElement extends PolymerElement {
 
 
   generate_heatmap(){
-    
+    // return;
     if (!this.color || !this.maxUtility) {
       return;
     }
