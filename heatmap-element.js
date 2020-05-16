@@ -1,6 +1,8 @@
 import {html, PolymerElement} from '@polymer/polymer/polymer-element.js';
+// import * as lodash from 'lodash';
 import {color_stops} from './color.js';
 import * as utils from './utils.js';
+
 /**
  * `heatmap-element`
  * heatmap for oTree Visual Markets
@@ -21,7 +23,7 @@ class HeatmapElement extends PolymerElement {
         }
       </style>
       
-      <canvas id="heatmapCanvas" height="200" width="300">
+      <canvas id="heatmapCanvas" height="400" width="400">
       <canvas id="currentCurveCanvas" height="200" width="300">
       <canvas id="hoverCurveCanvas" height="200" width="300">
       </canvas>
@@ -73,16 +75,23 @@ class HeatmapElement extends PolymerElement {
         notify: true,
         observer: 'get_current_util'
       },
-      currentUtility: {
+      _currentUtility: {
         type: Number,
         notify: true,
         observer: 'define_current_curve'
       },
-      maxUtility: {
+      _maxUtility: {
         type: Number,
         notify: true,
         observer: 'generate_heatmap'
-      }
+      },
+      _previousCurve: {
+        type: Array,
+      },
+      _initalState: {
+        type: Object,
+      },
+
 
     };
   }
@@ -90,23 +99,23 @@ class HeatmapElement extends PolymerElement {
   constructor(){
     super();
     this.color = 'red';
-    this.currentXAsset = 3;
-    this.currentYAsset = 4;
-    // this.addEventListener('mouseover', this.hover_test.bind(event));
+    this.currentXAsset = 2;
+    this.currentYAsset = 2;
+    this.addEventListener('mousemove', this.hover_curve.bind(event), 10);
   }
 
   get_current_util(){
-    if(!this.currentYAsset || !this.currentXAsset || this.currentUtility){
+    if(!this.currentYAsset || !this.currentXAsset || this._currentUtility){
       return;
     }
-    this.currentUtility = this.utility_function(this.currentXAsset, this.currentYAsset);
+    this._currentUtility = this.utility_function(this.currentXAsset, this.currentYAsset);
   }
 
 
   // Get max then make heatmap
   get_max(){
     // Needed for function
-    if(!this.minXAsset || !this.minYAsset || !this.maxYAsset || !this.maxXAsset || this.maxUtility){
+    if(!this.minXAsset || !this.minYAsset || !this.maxYAsset || !this.maxXAsset || this._maxUtility){
       return;
     }
     var t1 = performance.now();
@@ -125,7 +134,7 @@ class HeatmapElement extends PolymerElement {
     }
     
     // Set max value, used for normalizing pixel heat intensity
-    this.maxUtility = max;
+    this._maxUtility = max;
     var t2 = performance.now();
     // console.log("end max: " + (t2-t1));
   }
@@ -152,7 +161,7 @@ class HeatmapElement extends PolymerElement {
         var difference = Math.abs(point_payoff - target_utility);
 
         if(difference < delta){
-          points.push({x: col, y: row});
+          points.push({x: col, y: row, payoff: point_payoff});
         }
       }
     }
@@ -178,10 +187,13 @@ class HeatmapElement extends PolymerElement {
       context.quadraticCurveTo(cp_x2,points[i+1].y ,points[i+1].x,points[i+1].y);
     }
     context.stroke();
+    // console.log("curve");
+    // console.log(points);
+    
   }
 
   define_current_curve(){
-    if(!this.currentUtility){
+    if(!this._currentUtility){
       return;
     }
     // var t1 = performance.now();
@@ -196,32 +208,85 @@ class HeatmapElement extends PolymerElement {
     }
     
 
-    const points = this.get_indiffernce_curve_points(assets, this.currentUtility, 1, this.utility_function, canvas.width, canvas.height);
+    const points = this.get_indiffernce_curve_points(assets, this._currentUtility, .3, this.utility_function, canvas.width, canvas.height);
     this.draw_indifference_curve(context,points);
-    // var t2 = performance.now();
+    const imageData = context.getImageData(0,0, canvas.width, canvas.height);
+    this._initalState = imageData;
     // console.log("end curve: " + (t2-t1));
   }
 
-  // hover_test(e){
-  //   var bounds = e.target.getBoundingClientRect();
-  //   var canvas = e.target.$.heatmapCanvas;
-  //   var w = canvas.width;
-  //   var h = canvas.height;
-  //   var x = (e.pageX - bounds.left);
-  //   var y = (e.pageY - bounds.top);
 
+  // Fill previous hoer curve
+  fill_previous_curve(element, context, points, w,h ){
+    // const imageData = context.getImageData(0,0, w, h);
+    // const data = imageData.data;
+    // console.log("Filling");
     
-  //   // const pixel_x_value = ((x * (e.target.maxXAsset - e.target.minXAsset)) / w) + (e.target.minXAsset);
-  //   // const pixel_y_value = (( (h - y) * (e.target.maxYAsset - e.target.minYAsset)) / h) + (e.target.minYAsset);
+    // for(var i = 0; i < points.length; i++){
+    //   const index = (points[i].y * w * 4) + (points[i].x * 4);
+    //   const point_color = element.get_gradient_color((points.payoff/ element._maxUtility), element.color);
+    //   data[index] = point_color[0];
+    //   data[index + 1] = point_color[1];
+    //   data[index + 2] = point_color[2];
+    //   // set alpha channel to fully opaque
+    //   data[index + 3] = 255;
+    // }
+    context.putImageData(element._initalState, 0, 0);
+  }
+  
+  hover_curve(e){
+    const element = e.target;
+    const bounds = element.getBoundingClientRect();
+    const canvas = element.$.heatmapCanvas;
+    const context = canvas.getContext("2d");
+    const w = canvas.width;
+    const h = canvas.height;
+    const x = (e.pageX - bounds.left);
+    const y = (e.pageY - bounds.top);
+    
+    
+    const pixel_x_value = ((x * (element.maxXAsset - element.minXAsset)) / w) + (element.minXAsset);
+    const pixel_y_value = (( (h - y) * (element.maxYAsset - element.minYAsset)) / h) + (element.minYAsset);
+    
+    // Hover is out of bounds
+    // Happens occasionally when first entering bounds
+    if(pixel_x_value < element.minXAsset || pixel_x_value > element.maxXAsset ||
+      pixel_y_value < element.minYAsset || pixel_y_value > element.maxYAsset){
+        return;
+    }
+    // console.log(pixel_x_value);
+    // console.log(pixel_y_value);
+    
+    const utility = element.utility_function(pixel_x_value,pixel_y_value);
 
+    const assets = {
+      maxXAsset: element.maxXAsset,
+      minXAsset: element.minXAsset,
+      maxYAsset: element.maxYAsset,
+      minYAsset: element.minYAsset,
+    }
+    
+    
+    const points = element.get_indiffernce_curve_points(assets, utility, .3, element.utility_function, w, h);
 
-  //   // console.log("x: " + x + "\ty: " + y);
-  //   // console.log("x_val: " + pixel_x_value + "\ty_val: " + pixel_y_value);
-  //   // console.log(e);
-  //   // console.log(e.target.color);
+    if(element._previousCurve){
+      element.fill_previous_curve(element, context, element._previousCurve, w, h);
+    }
+    element.draw_indifference_curve(context,points);
+    element._previousCurve = points;
     
     
-  // }
+    
+    
+    
+    
+    // console.log("x: " + x + "\ty: " + y);
+    // console.log("x_val: " + pixel_x_value + "\ty_val: " + pixel_y_value);
+    // console.log(e);
+    // console.log(element.color);
+    
+    
+  }
 
   // gets colors from the gradient defined by the color stops above
   // 0.0 <= percent <= 1.0
@@ -258,7 +323,7 @@ class HeatmapElement extends PolymerElement {
 
   generate_heatmap(){
     // return;
-    if (!this.color || !this.maxUtility) {
+    if (!this.color || !this._maxUtility) {
       return;
     }
     var t1 = performance.now();
@@ -269,7 +334,7 @@ class HeatmapElement extends PolymerElement {
     const ctx = canvas.getContext('2d');
     
     // const max_payoff = this.get_max(this.utility_function, this.minXAsset, this.minY, this.maxXAsset, this.maxYAsset, 1);
-    const max_payoff = this.maxUtility;
+    const max_payoff = this._maxUtility;
 
     // create empty imageData object
     const imageData = ctx.createImageData(w, h);

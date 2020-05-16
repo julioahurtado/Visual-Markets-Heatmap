@@ -3,7 +3,8 @@
   "description": "heatmap for oTree Visual Markets",
   "main": "heatmap-element.js",
   "dependencies": {
-    "@polymer/polymer": "^3.0.0"
+    "@polymer/polymer": "^3.0.0",
+    "lodash": "^4.17.15"
   },
   "devDependencies": {
     "@polymer/iron-demo-helpers": "^3.0.0-pre.19",
