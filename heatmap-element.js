@@ -24,8 +24,6 @@ class HeatmapElement extends PolymerElement {
       </style>
       
       <canvas id="heatmapCanvas" height="400" width="400">
-      <canvas id="currentCurveCanvas" height="200" width="300">
-      <canvas id="hoverCurveCanvas" height="200" width="300">
       </canvas>
     `;
   }
@@ -101,6 +99,8 @@ class HeatmapElement extends PolymerElement {
     this.color = 'red';
     this.currentXAsset = 2;
     this.currentYAsset = 2;
+
+    // Bind hover function
     this.addEventListener('mousemove',_.throttle(this.hover_curve.bind(event), 50) );
   }
 
@@ -232,7 +232,6 @@ class HeatmapElement extends PolymerElement {
       data[index + 3] = 255;
     }
     context.putImageData(element._initalState, 0, 0);
-    // context.putImageData(imageData, 0, 0);
   }
   
   hover_curve(e){
