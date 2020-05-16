@@ -1,5 +1,5 @@
 import {html, PolymerElement} from '@polymer/polymer/polymer-element.js';
-// import * as lodash from 'lodash';
+import * as _ from "underscore"
 import {color_stops} from './color.js';
 import * as utils from './utils.js';
 
@@ -101,7 +101,7 @@ class HeatmapElement extends PolymerElement {
     this.color = 'red';
     this.currentXAsset = 2;
     this.currentYAsset = 2;
-    this.addEventListener('mousemove', this.hover_curve.bind(event), 10);
+    this.addEventListener('mousemove',_.throttle(this.hover_curve.bind(event), 50) );
   }
 
   get_current_util(){
@@ -218,20 +218,21 @@ class HeatmapElement extends PolymerElement {
 
   // Fill previous hoer curve
   fill_previous_curve(element, context, points, w,h ){
-    // const imageData = context.getImageData(0,0, w, h);
-    // const data = imageData.data;
-    // console.log("Filling");
+    const imageData = context.getImageData(0,0, w, h);
+    const data = imageData.data;
+    console.log("Filling");
     
-    // for(var i = 0; i < points.length; i++){
-    //   const index = (points[i].y * w * 4) + (points[i].x * 4);
-    //   const point_color = element.get_gradient_color((points.payoff/ element._maxUtility), element.color);
-    //   data[index] = point_color[0];
-    //   data[index + 1] = point_color[1];
-    //   data[index + 2] = point_color[2];
-    //   // set alpha channel to fully opaque
-    //   data[index + 3] = 255;
-    // }
+    for(var i = 0; i < points.length; i++){
+      const index = (points[i].y * w * 4) + (points[i].x * 4);
+      const point_color = element.get_gradient_color((points[i].payoff/ element._maxUtility), element.color);
+      data[index] = point_color[0];
+      data[index + 1] = point_color[1];
+      data[index + 2] = point_color[2];
+      // set alpha channel to fully opaque
+      data[index + 3] = 255;
+    }
     context.putImageData(element._initalState, 0, 0);
+    // context.putImageData(imageData, 0, 0);
   }
   
   hover_curve(e){

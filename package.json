@@ -4,7 +4,7 @@
   "main": "heatmap-element.js",
   "dependencies": {
     "@polymer/polymer": "^3.0.0",
-    "lodash": "^4.17.15"
+    "underscore": "^1.10.2"
   },
   "devDependencies": {
     "@polymer/iron-demo-helpers": "^3.0.0-pre.19",
