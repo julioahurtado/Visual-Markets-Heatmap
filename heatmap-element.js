@@ -109,8 +109,7 @@ class HeatmapElement extends PolymerElement {
    * Calculates the utility for the user's current x and y asset values
    */
   get_current_util () {
-
-    // Break if prerequisite variables not defined or if function already completed 
+    // Break if prerequisite variables not defined or if function already completed
     if (!this.currentYAsset || !this.currentXAsset || this._currentUtility) {
       return
     }
@@ -121,24 +120,21 @@ class HeatmapElement extends PolymerElement {
    * Calculates the maximum utility possible withing the given x and y asset range
    */
   get_max () {
-    
-    // Break if prerequisite variables not defined or if function already completed 
+    // Break if prerequisite variables not defined or if function already completed
     if (!this.minXAsset || !this.minYAsset || !this.maxYAsset || !this.maxXAsset || this._maxUtility) {
       return
     }
-    
-    
+
     // var t1 = performance.now() // Uncomment if performamnce testing is needed
 
     // Function Variables
-    const step = 0.01   // Increase for faster start up, decrease for better accuracy
+    const step = 0.01 // Increase for faster start up, decrease for better accuracy
     var max = -1
     var temp = max
 
     // Do a brute force iteration over the domain
     for (var i = this.minXAsset; i <= this.maxXAsset; i += step) {
       for (var j = this.minYAsset; j <= this.maxYAsset; j += step) {
-        
         // Calculate utility of current x and y assets
         temp = this.utility_function(i, j)
         if (temp > max) {
@@ -150,16 +146,14 @@ class HeatmapElement extends PolymerElement {
     // Set max value, used for normalizing pixel heat intensity
     this._maxUtility = max
 
-
     // Uncomment if performamnce testing is needed
     // var t2 = performance.now()
     // console.log("end max: " + (t2-t1));
   }
 
-
   /**
    * Calculate the points used for the indiffernce curve
-   * 
+   *
    * @param {Object} asset_bounds     min/max X and Y asset values
    * @param {Number} target_utility   indifference curve utility value
    * @param {Number} delta            acceptable difference from target
@@ -169,7 +163,6 @@ class HeatmapElement extends PolymerElement {
    * @return {Object Array}           points used for indifference curve
    */
   get_indiffernce_curve_points (asset_bounds, target_utility, delta, util_function, width, height) {
-    
     // List of points that are within delta range of target_utility
     var points = []
 
@@ -177,21 +170,20 @@ class HeatmapElement extends PolymerElement {
     // accoplishes left-right sorted fashion
     for (let col = 0; col < width; col++) {
       for (let row = 0; row < height; row++) {
-
         // Translate coords to x,y asset values
         // https://stackoverflow.com/questions/929103/convert-a-number-range-to-another-range-maintaining-ratio
-        const pixel_x_value = ((col * (asset_bounds.maxXAsset - asset_bounds.minXAsset)) / width) + (asset_bounds.minXAsset);
-        const pixel_y_value = (((height - row) * (asset_bounds.maxYAsset - asset_bounds.minYAsset)) / height) + (asset_bounds.minYAsset);
+        const pixel_x_value = ((col * (asset_bounds.maxXAsset - asset_bounds.minXAsset)) / width) + (asset_bounds.minXAsset)
+        const pixel_y_value = (((height - row) * (asset_bounds.maxYAsset - asset_bounds.minYAsset)) / height) + (asset_bounds.minYAsset)
 
         // Call utility function
-        const point_payoff = util_function(pixel_x_value, pixel_y_value);
+        const point_payoff = util_function(pixel_x_value, pixel_y_value)
 
         // Get differnce from target util
-        var difference = Math.abs(point_payoff - target_utility);
+        var difference = Math.abs(point_payoff - target_utility)
 
         // Add to list if withing range
         if (difference < delta) {
-          points.push({ x: col, y: row, payoff: point_payoff });
+          points.push({ x: col, y: row, payoff: point_payoff })
         }
       }
     }
@@ -206,7 +198,7 @@ class HeatmapElement extends PolymerElement {
    * Method used to draw an indiffernce curve
    * Idea taken from:
    *  https://stackoverflow.com/questions/7054272/how-to-draw-smooth-curve-through-n-points-using-javascript-html5-canvas
-   * 
+   *
    * @param {*} context context of the canvas to be used
    * @param {*} points  array containing the points of the curve
    *                    format: [{x: Number, y: Number, payoff: Number}, ...]
@@ -216,14 +208,14 @@ class HeatmapElement extends PolymerElement {
     context.moveTo((points[0].x), points[0].y)
 
     for (var i = 0; i < points.length - 1; i++) {
-      var x_mid = (points[i].x + points[i + 1].x) / 2;
-      var y_mid = (points[i].y + points[i + 1].y) / 2;
-      var cp_x1 = (x_mid + points[i].x) / 2;
-      var cp_x2 = (x_mid + points[i + 1].x) / 2;
-      context.quadraticCurveTo(cp_x1, points[i].y, x_mid, y_mid);
-      context.quadraticCurveTo(cp_x2, points[i + 1].y, points[i + 1].x, points[i + 1].y);
+      var x_mid = (points[i].x + points[i + 1].x) / 2
+      var y_mid = (points[i].y + points[i + 1].y) / 2
+      var cp_x1 = (x_mid + points[i].x) / 2
+      var cp_x2 = (x_mid + points[i + 1].x) / 2
+      context.quadraticCurveTo(cp_x1, points[i].y, x_mid, y_mid)
+      context.quadraticCurveTo(cp_x2, points[i + 1].y, points[i + 1].x, points[i + 1].y)
     }
-    context.stroke();
+    context.stroke()
   }
 
   /**
@@ -231,16 +223,16 @@ class HeatmapElement extends PolymerElement {
    */
   define_current_curve () {
     if (!this._currentUtility) {
-      return;
+      return
     }
 
     // Uncomment for performace testing
-    // var t1 = performance.now(); 
-    
+    // var t1 = performance.now();
+
     // Select canvas element
-    const canvas = this.$.heatmapCanvas;
-    const context = canvas.getContext('2d');
-    
+    const canvas = this.$.heatmapCanvas
+    const context = canvas.getContext('2d')
+
     // Create object of asset boundaries
     const asset_bounds = {
       maxXAsset: this.maxXAsset,
@@ -248,17 +240,17 @@ class HeatmapElement extends PolymerElement {
       maxYAsset: this.maxYAsset,
       minYAsset: this.minYAsset
     }
-    
+
     // Calculate points on curve
-    const points = this.get_indiffernce_curve_points(asset_bounds, this._currentUtility, 0.3, this.utility_function, canvas.width, canvas.height);
+    const points = this.get_indiffernce_curve_points(asset_bounds, this._currentUtility, 0.3, this.utility_function, canvas.width, canvas.height)
 
     // Draw the indiffernce curve
-    this.draw_indifference_curve(context, points);
+    this.draw_indifference_curve(context, points)
 
     // Create a baseline for the orginal graph, used for erasing hover curves
-    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-    this._initalState = imageData;
-    
+    const imageData = context.getImageData(0, 0, canvas.width, canvas.height)
+    this._initalState = imageData
+
     // Uncomment for performace testing
     // var t2 = performance.now();
     // console.log("end curve: " + (t2-t1));
@@ -268,43 +260,42 @@ class HeatmapElement extends PolymerElement {
    * Erase old hover curve
    * @param {*} element replacement for keyword "this"
    * @param {*} context canvas context
-   * @param {*} points  points 
-   * @param {*} w 
-   * @param {*} h 
+   * @param {*} points  points
+   * @param {*} w
+   * @param {*} h
    */
   erase_old_hover_curve (element, context) {
-    context.putImageData(element._initalState, 0, 0);
+    context.putImageData(element._initalState, 0, 0)
   }
 
   /**
    * Generate indiffernce curve based on current mouse position
-   * 
+   *
    * @param {*} e mousemove event
    */
   hover_curve (e) {
-    
     // function variables
-    const element = e.target;
-    const bounds = element.getBoundingClientRect();
-    const canvas = element.$.heatmapCanvas;
-    const context = canvas.getContext('2d');
-    const w = canvas.width;
-    const h = canvas.height;
-    const x = (e.pageX - bounds.left);
-    const y = (e.pageY - bounds.top);
+    const element = e.target
+    const bounds = element.getBoundingClientRect()
+    const canvas = element.$.heatmapCanvas
+    const context = canvas.getContext('2d')
+    const w = canvas.width
+    const h = canvas.height
+    const x = (e.pageX - bounds.left)
+    const y = (e.pageY - bounds.top)
 
-    const pixel_x_value = ((x * (element.maxXAsset - element.minXAsset)) / w) + (element.minXAsset);
-    const pixel_y_value = (((h - y) * (element.maxYAsset - element.minYAsset)) / h) + (element.minYAsset);
+    const pixel_x_value = ((x * (element.maxXAsset - element.minXAsset)) / w) + (element.minXAsset)
+    const pixel_y_value = (((h - y) * (element.maxYAsset - element.minYAsset)) / h) + (element.minYAsset)
 
     // Hover is out of bounds
     // Happens occasionally when first entering bounds
     if (pixel_x_value < element.minXAsset || pixel_x_value > element.maxXAsset ||
       pixel_y_value < element.minYAsset || pixel_y_value > element.maxYAsset) {
-      return;
+      return
     }
 
     // Utility of current mouse position
-    const utility = element.utility_function(pixel_x_value, pixel_y_value);
+    const utility = element.utility_function(pixel_x_value, pixel_y_value)
 
     // Create object of asset boundaries
     const asset_bounds = {
@@ -315,24 +306,24 @@ class HeatmapElement extends PolymerElement {
     }
 
     // Calculate points on curve
-    const points = element.get_indiffernce_curve_points(asset_bounds, utility, 0.3, element.utility_function, w, h);
+    const points = element.get_indiffernce_curve_points(asset_bounds, utility, 0.3, element.utility_function, w, h)
 
     // If a hover curve is displayed alreay erase it
     if (element._previousCurve) {
-      element.erase_old_hover_curve(element, context, element._previousCurve, w, h);
+      element.erase_old_hover_curve(element, context, element._previousCurve, w, h)
     } else {
-      element._previousCurve = true;
+      element._previousCurve = true
     }
     // Draw hover curve
-    element.draw_indifference_curve(context, points);
+    element.draw_indifference_curve(context, points)
   }
 
-  // 
+  //
   /**
    * gets colors from the gradient defined by the color stops above
    * 0.0 <= percent <= 1.0
    * where percent = 1.0 gets the last color in color_stops and percent = 0.0 gets the first color in color_stops
-   * 
+   *
    * @param {*} percent       curr_payoff / max payoff
    * @param {*} color_scheme  color scheem of gradient
    */
@@ -368,13 +359,11 @@ class HeatmapElement extends PolymerElement {
    * Generate the heatmap for the given utility function
    */
   generate_heatmap () {
-    
-    
     // return if variables are not yet initialized
     if (!this.color || !this._maxUtility) {
       return
     }
-    
+
     // Uncomment for performance testing
     // var t1 = performance.now()
 
@@ -420,7 +409,7 @@ class HeatmapElement extends PolymerElement {
 
     // Display heatmap
     ctx.putImageData(imageData, 0, 0)
-    
+
     // Uncomment for performance testing
     // var t2 = performance.now()
     // console.log('end heatmap: ' + (t2 - t1))
