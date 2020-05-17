@@ -23,7 +23,7 @@ class HeatmapElement extends PolymerElement {
         }
       </style>
       
-      <canvas id="heatmapCanvas" height="400" width="400">
+      <canvas id="heatmapCanvas" height="400" width="550">
       </canvas>
     `
   }
@@ -291,6 +291,7 @@ class HeatmapElement extends PolymerElement {
    */
   hover_curve (e) {
     // function variables
+    // var t1 = performance.now() // Uncomment if performamnce testing is needed
     const element = e.target
     const bounds = element.getBoundingClientRect()
     const canvas = element.$.heatmapCanvas
@@ -332,6 +333,8 @@ class HeatmapElement extends PolymerElement {
     }
     // Draw hover curve
     element.draw_indifference_curve(context, points)
+    // var t2 = performance.now()
+    // console.log("Hover curve: " + (t2-t1));
   }
 
   /**
@@ -387,7 +390,6 @@ class HeatmapElement extends PolymerElement {
     const h = canvas.height
     const ctx = canvas.getContext('2d')
 
-    // const max_payoff = this.get_max(this.utility_function, this.minXAsset, this.minY, this.maxXAsset, this.maxYAsset, 1);
     const max_payoff = this._maxUtility
 
     // create empty imageData object
