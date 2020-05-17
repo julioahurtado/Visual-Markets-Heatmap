@@ -103,6 +103,22 @@ class HeatmapElement extends PolymerElement {
 
     // Bind hover function
     this.addEventListener('mousemove', _.throttle(this.hover_curve.bind(event), 35))
+    this.addEventListener('mouseout', _.throttle(this.mouse_leave.bind(event), 35))
+  }
+
+  mouse_leave (e) {
+    const element = e.target
+    if (!element._previousCurve) {
+      return
+    }
+
+    console.log('leave')
+
+    const canvas = element.$.heatmapCanvas
+    const context = canvas.getContext('2d')
+
+    element.erase_old_hover_curve(element, context)
+    element._previousCurve = false
   }
 
   /**
@@ -318,7 +334,6 @@ class HeatmapElement extends PolymerElement {
     element.draw_indifference_curve(context, points)
   }
 
-  //
   /**
    * gets colors from the gradient defined by the color stops above
    * 0.0 <= percent <= 1.0
