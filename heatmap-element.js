@@ -225,7 +225,8 @@ class HeatmapElement extends PolymerElement {
    * @param {Object} element 
    */
   draw_countour_line(element, threshold, save){
-    var points = ms.isoLines(element._dataQuadTree, threshold);
+    var t1 = performance.now()
+    var points = ms.isoLines(element._dataQuadTree2, threshold);
     const canvas = element.$.heatmapCanvas 
     const w = canvas.width
     const h = canvas.height
@@ -236,7 +237,7 @@ class HeatmapElement extends PolymerElement {
     for(var i = 0; i < points[0].length; i++){
       
       // Skip border indexes
-      if(h - Math.ceil(points[0][i][1]) <= 1 || Math.floor(points[0][i][0]) === 0){
+      if(h - Math.ceil(points[0][i][1]) <= 1 || Math.floor(points[0][i][0]) === 0 || (w - Math.ceil(points[0][i][0])) <= 1){
         continue;
       }
       const index = (Math.floor(points[0][i][1]) * 550 * 4) + (Math.floor(points[0][i][0]) * 4)
@@ -252,7 +253,8 @@ class HeatmapElement extends PolymerElement {
     if(save){
       element._old_line = points
     }
-
+    var t2 = performance.now()
+    console.log('end countour: ' + (t2 - t1))
   }
 
   /**
@@ -478,7 +480,7 @@ class HeatmapElement extends PolymerElement {
     ctx.putImageData(imageData, 0, 0)
 
     // Perform preprocessing for improved performance in further calls
-    this._dataQuadTree = msData;
+    this._dataQuadTree = new ms.QuadTree(msData);
 
     // Uncomment for performance testing
     // var t2 = performance.now()
