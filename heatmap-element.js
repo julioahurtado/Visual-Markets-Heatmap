@@ -109,7 +109,7 @@ class HeatmapElement extends PolymerElement {
     this.currentYAsset = 1.5
 
     // Bind hover function
-    this.addEventListener('mousemove', _.throttle(this.hover_curve.bind(event), 40))
+    this.addEventListener('mousemove', _.throttle(this.hover_curve.bind(event), 50))
     this.addEventListener('mouseout', _.throttle(this.mouse_leave.bind(event), 35))
   }
 
@@ -211,7 +211,7 @@ class HeatmapElement extends PolymerElement {
     }
     ctx.putImageData(imageData, 0, 0)
     var t2 = performance.now()
-    // console.log('end countour: ' + (t2 - t1))
+    console.log('end countour: ' + (t2 - t1))
   }
 
 
