@@ -124,8 +124,6 @@ class HeatmapElement extends PolymerElement {
       return
     }
 
-    console.log('leave')
-
     const canvas = element.$.heatmapCanvas
     const context = canvas.getContext('2d')
 
